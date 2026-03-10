@@ -320,11 +320,12 @@ http.createServer(async (req, res) => {
       doc.render(body.data || {});
 
       const buf = doc.getZip().generate({ type: "nodebuffer", compression: "DEFLATE" });
-      const filename = `zmluva_${(body.data.Z1_MENO || "klient").replace(/\s+/g, "_")}.docx`;
+      const rawName = `zmluva_${(body.data.Z1_MENO || "klient").replace(/\s+/g, "_")}`;
+      const safeFilename = rawName.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9_\-]/g, "_") + ".docx";
 
       res.writeHead(200, {
         "Content-Type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        "Content-Disposition": `attachment; filename="${filename}"`,
+        "Content-Disposition": `attachment; filename="${safeFilename}"`,
         "Access-Control-Allow-Origin": "*"
       });
       return res.end(buf);
