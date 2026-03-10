@@ -1,0 +1,16 @@
+{
+  "name": "dawid-wealthgroup",
+  "version": "1.0.0",
+  "description": "Dawid AI assistant for Wealth Group",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "docxtemplater": "^3.44.0",
+    "pizzip": "^3.1.4"
+  }
+}
