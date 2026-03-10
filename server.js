@@ -77,7 +77,7 @@ http.createServer(async (req, res) => {
   }
 
   // Static files
-  const filePath = path.join(__dirname, "public", url === "/" ? "/index.html" : url);
+  const filePath = path.join(__dirname, url === "/" ? "index.html" : url);
   fs.readFile(filePath, (err, data) => {
     if (err) { res.writeHead(404); return res.end("Not found"); }
     res.writeHead(200, {"Content-Type": MIME[path.extname(filePath)] || "text/plain"});
