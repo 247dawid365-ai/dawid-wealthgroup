@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rema — rodinná e-ink tabuľa na stenu</title>
+<meta name="description" content="Rema je tichá e-ink tabuľa na stenu. Dnešný deň, nákup a plány celej rodiny na jednom mieste, bez svietenia a bez rozptyľovania.">
+<meta name="theme-color" content="#ECE6DA">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500&family=Inter+Tight:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --wall:#ECE6DA; --paper:#F6F2E9; --ink:#141412; --soft:#5E5A52; --line:rgba(20,20,18,.14);
+  --accent:#B4532A; --night:#121211; --eink:#DAD7CD; --einkink:#1B1B19;
+  --serif:'Fraunces',Georgia,'Times New Roman',serif; --sans:'Inter Tight',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --pad:clamp(20px,5vw,72px);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{background:var(--wall);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit}
+img,svg{display:block;max-width:100%}
+.wrap{max-width:1240px;margin:0 auto;padding:0 var(--pad)}
+.eyebrow{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--soft);font-weight:500}
+h1,h2,h3{font-family:var(--serif);font-weight:300;letter-spacing:-.02em;line-height:1.04}
+h1{font-size:clamp(44px,7vw,104px)}
+h2{font-size:clamp(34px,5.2vw,74px)}
+h3{font-size:clamp(22px,2.4vw,30px);font-weight:400;letter-spacing:-.01em;line-height:1.15}
+h1 em,h2 em{font-style:italic;font-weight:300;color:var(--accent)}
+p.lead{font-size:clamp(18px,1.6vw,22px);color:var(--soft);max-width:34em}
+section{padding:clamp(80px,12vw,180px) 0}
+.btn{display:inline-flex;align-items:center;gap:10px;background:var(--ink);color:var(--paper);text-decoration:none;padding:16px 28px;border-radius:999px;font-weight:500;font-size:16px;border:0;cursor:pointer;transition:transform .3s,background .3s}
+.btn:hover{background:var(--accent);transform:translateY(-2px)}
+.btn.ghost{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.btn.ghost:hover{background:var(--ink);color:var(--paper)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+
+/* NAV */
+nav{position:fixed;inset:0 0 auto 0;z-index:50;padding:18px 0;transition:background .3s,backdrop-filter .3s}
+nav.solid{background:rgba(236,230,218,.82);backdrop-filter:blur(14px)}
+nav .wrap{display:flex;justify-content:space-between;align-items:center}
+.logo{font-family:var(--serif);font-size:26px;letter-spacing:-.02em;text-decoration:none}
+.logo i{color:var(--accent);font-style:normal}
+nav .btn{padding:10px 20px;font-size:14px}
+
+/* HERO */
+.hero{padding:clamp(104px,11vw,140px) 0 clamp(60px,8vw,110px);text-align:center}
+.hero h1{max-width:12ch;margin:22px auto 26px}
+.hero p.lead{margin:0 auto 34px}
+.hero .cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.stage{margin-top:clamp(36px,5vw,64px);perspective:1800px}
+
+/* BOARD */
+.board{width:min(960px,100%);margin:0 auto;aspect-ratio:4/3;background:linear-gradient(145deg,#2a2926,#0f0f0e 55%,#1d1c1a);border-radius:clamp(10px,1.6vw,18px);padding:clamp(10px,2.2vw,26px);position:relative;
+  box-shadow:0 1px 0 rgba(255,255,255,.12) inset,0 -2px 0 rgba(0,0,0,.6) inset,0 2px 4px rgba(0,0,0,.25),0 30px 50px -18px rgba(40,25,10,.45),0 80px 120px -40px rgba(40,25,10,.4);
+  transform:rotateX(2deg);transition:transform .8s cubic-bezier(.2,.7,.2,1)}
+.board:hover{transform:rotateX(0)}
+.screen{position:relative;width:100%;height:100%;background:var(--eink);color:var(--einkink);border-radius:3px;overflow:hidden;box-shadow:0 0 0 1px rgba(0,0,0,.5),inset 0 0 40px rgba(60,55,40,.15);container-type:inline-size;text-align:left}
+.screen::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.018) 0 1px,transparent 1px 3px);mix-blend-mode:multiply}
+.flash{position:absolute;inset:0;background:#0a0a09;opacity:0;pointer-events:none;z-index:5}
+.flash.go{animation:eink .7s steps(1) forwards}
+@keyframes eink{0%{opacity:1}22%{opacity:0}40%{opacity:.85;background:#eee}58%{opacity:0}74%{opacity:.35}100%{opacity:0}}
+.tabs{position:absolute;top:0;left:0;right:0;display:flex;gap:0;border-bottom:1px solid var(--einkink);z-index:2;background:var(--eink)}
+.tabs button{flex:1;background:none;border:0;border-right:1px solid var(--einkink);font:500 clamp(9px,1.7cqw,14px)/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;padding:1.6cqw 0;cursor:pointer;color:var(--einkink)}
+.tabs button:last-child{border-right:0}
+.tabs button[aria-selected=true]{background:var(--einkink);color:var(--eink)}
+.view{position:absolute;inset:0;padding:clamp(34px,7.6cqw,68px) 4cqw 3.4cqw}
+/* Day view */
+.day{display:grid;grid-template-columns:1.05fr 1fr;gap:4cqw;height:100%}
+.day .big{font-family:var(--serif);font-weight:300;font-size:30cqw;line-height:.8;letter-spacing:-.05em}
+.day .wd{font-family:var(--serif);font-size:5.6cqw;margin-top:2.4cqw;font-style:italic}
+.day .mo{font:500 1.7cqw/1 var(--sans);letter-spacing:.2em;text-transform:uppercase;margin-top:1.4cqw}
+.day .nm{margin-top:auto;border-top:1px solid var(--einkink);padding-top:1.8cqw;font:500 1.4cqw/1 var(--sans);letter-spacing:.18em;text-transform:uppercase}
+.day .nm b{display:block;font:400 4.2cqw/1.1 var(--serif);letter-spacing:-.01em;text-transform:none;margin-top:1cqw}
+.day .l{display:flex;flex-direction:column}
+.day .r h4,.cal-h{font:500 1.4cqw/1 var(--sans);letter-spacing:.18em;text-transform:uppercase;padding-bottom:1.3cqw;border-bottom:1px solid var(--einkink);margin-bottom:1.2cqw}
+.row{display:flex;gap:2cqw;font-size:2.15cqw;line-height:1.25;padding:1.05cqw 0;border-bottom:1px dotted rgba(27,27,25,.4)}
+.row time{font-variant-numeric:tabular-nums;font-weight:600;min-width:7cqw}
+.row .bx{width:1.9cqw;height:1.9cqw;border:1.5px solid var(--einkink);margin-top:.35cqw;flex:none}
+.row .bx.on{background:var(--einkink)}
+.row.new{animation:pop .6s both}
+.r .gap{height:2.6cqw}
+/* Week */
+.week{display:grid;grid-template-columns:repeat(7,1fr);height:100%;border-left:1px solid var(--einkink)}
+.week>div{border-right:1px solid var(--einkink);padding:0 1.1cqw;display:flex;flex-direction:column;gap:.9cqw}
+.week .d{font:500 1.4cqw/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;padding-top:.4cqw}
+.week .n{font:300 6cqw/1 var(--serif);letter-spacing:-.04em}
+.week .today{background:var(--einkink);color:var(--eink)}
+.week .ev{font-size:1.5cqw;line-height:1.25;border-top:1px solid currentColor;padding-top:.7cqw}
+.week .nmx{font:italic 1.6cqw/1.2 var(--serif);margin-top:auto;padding-bottom:1.6cqw;opacity:.85}
+/* Month */
+.month{height:100%;display:flex;flex-direction:column}
+.month .ttl{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--einkink);padding-bottom:1.2cqw}
+.month .ttl b{font:300 7cqw/1 var(--serif);letter-spacing:-.03em;text-transform:capitalize}
+.month .ttl span{font:500 1.5cqw/1 var(--sans);letter-spacing:.16em}
+.grid{flex:1;display:grid;grid-template-columns:repeat(7,1fr);grid-auto-rows:1fr;margin-top:1.2cqw;border-left:1px solid rgba(27,27,25,.35);border-top:1px solid rgba(27,27,25,.35)}
+.grid>div{border-right:1px solid rgba(27,27,25,.35);border-bottom:1px solid rgba(27,27,25,.35);font:500 1.8cqw/1 var(--sans);padding:.8cqw 1cqw}
+.grid .h{font-size:1.25cqw;letter-spacing:.14em;text-transform:uppercase;border-bottom:1px solid var(--einkink);padding:.6cqw 1cqw;grid-row:auto}
+.grid .off{opacity:.3}
+.grid .t{background:var(--einkink);color:var(--eink)}
+.grid .dot{position:relative}
+.grid .dot::after{content:"";position:absolute;right:.9cqw;bottom:.9cqw;width:1cqw;height:1cqw;border-radius:50%;background:currentColor}
+.cap{font-size:13px;color:var(--soft);text-align:center;margin-top:34px;letter-spacing:.02em}
+
+/* STORY */
+.story{background:var(--night);color:#ECE6DA;padding:0}
+.story .wrap{position:relative}
+.story-in{display:grid;grid-template-columns:1fr 1fr;gap:clamp(30px,6vw,100px)}
+.steps{padding:30vh 0 20vh}
+.step{min-height:78vh;display:flex;flex-direction:column;justify-content:center;opacity:.25;transition:opacity .6s}
+.step.on{opacity:1}
+.step .num{font-family:var(--serif);font-style:italic;color:var(--accent);font-size:22px;margin-bottom:14px}
+.step h2{font-size:clamp(32px,4.2vw,58px);margin-bottom:18px}
+.step p{color:#A9A398;max-width:26em}
+.pin{position:sticky;top:0;height:100vh;height:100svh;display:flex;align-items:center;justify-content:center}
+.duo{position:relative;width:100%;height:min(74vh,640px);display:flex;align-items:center;justify-content:center}
+.phone{position:absolute;left:0;bottom:0;width:min(40%,250px);aspect-ratio:9/18.5;background:#0b0b0a;border-radius:clamp(22px,3vw,34px);padding:8px;box-shadow:0 0 0 1px #3a3935,0 40px 70px -20px #000;z-index:3;transition:transform .8s cubic-bezier(.2,.7,.2,1)}
+.phone .in{width:100%;height:100%;background:#F6F2E9;color:#141412;border-radius:clamp(16px,2.4vw,27px);padding:16% 9% 8%;display:flex;flex-direction:column;font-size:clamp(10px,1.15vw,14px);overflow:hidden}
+.phone h5{font:400 1.7em/1.1 var(--serif);margin-bottom:.9em}
+.phone .it{display:flex;gap:.7em;align-items:center;padding:.65em 0;border-bottom:1px solid rgba(0,0,0,.1)}
+.phone .it i{width:1.1em;height:1.1em;border:1.5px solid #141412;border-radius:50%;flex:none}
+.phone .in .add{margin-top:auto;border:1px solid rgba(0,0,0,.25);border-radius:99px;padding:.8em 1em;display:flex;justify-content:space-between;min-height:2.8em}
+.phone .add b{font-weight:500}
+.caret{display:inline-block;width:1px;height:1em;background:#141412;vertical-align:-.15em;animation:bl 1s steps(1) infinite}
+@keyframes bl{50%{opacity:0}}
+.phone .it.fresh{animation:pop .6s both}
+@keyframes pop{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.mini{position:absolute;right:0;top:46%;transform:translateY(-50%);width:min(74%,560px);aspect-ratio:4/3;transition:transform .8s cubic-bezier(.2,.7,.2,1)}
+.mini .board{transform:none;width:100%;box-shadow:0 40px 80px -20px #000}
+.mini .screen{background:var(--eink)}
+.shop{display:flex;flex-direction:column;height:100%}
+.shop .tt{font:300 7cqw/1 var(--serif);letter-spacing:-.03em;margin-bottom:2cqw}
+.shop .sub{font:500 1.5cqw/1 var(--sans);letter-spacing:.18em;text-transform:uppercase;border-bottom:1px solid var(--einkink);padding-bottom:1.3cqw;margin-bottom:1cqw;display:flex;justify-content:space-between}
+.shop .row{font-size:3cqw;padding-left:0;padding:1.3cqw 0}
+.shop .row .bx{width:2.6cqw;height:2.6cqw}
+.shop .row.hid{display:none}
+.shop .row.fresh{animation:pop .7s both}
+.sync{position:absolute;right:4cqw;top:2.6cqw;font:500 1.3cqw/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;opacity:0;transition:opacity .4s}
+.sync.on{opacity:1}
+/* step states via data-s on .duo */
+.duo[data-s="0"] .mini{transform:translateY(-50%) translateX(4%) scale(.96)}
+.duo[data-s="1"] .phone{transform:translateY(-4%)}
+.duo[data-s="2"] .mini{transform:translateY(-50%) scale(1.02)}
+.duo[data-s="2"] .phone{transform:translateX(-6%) scale(.92)}
+
+/* PROSE SECTIONS */
+.split{display:grid;grid-template-columns:5fr 7fr;gap:clamp(30px,7vw,120px);align-items:start}
+.split h2{position:sticky;top:110px}
+.rows{border-top:1px solid var(--ink)}
+.rows article{display:grid;grid-template-columns:70px 1fr;gap:10px;padding:32px 0;border-bottom:1px solid var(--line)}
+.rows .k{font-family:var(--serif);font-style:italic;color:var(--accent);font-size:20px;padding-top:4px}
+.rows p{color:var(--soft);margin-top:10px;max-width:34em}
+.paper{background:var(--paper)}
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:clamp(16px,3vw,40px);margin-top:clamp(40px,6vw,80px)}
+.cmp{padding:clamp(24px,4vw,50px);border:1px solid var(--line);border-radius:6px}
+.cmp.eink{background:var(--eink);border-color:transparent}
+.cmp.lcd{background:linear-gradient(160deg,#16294a,#0a1222);color:#cfe0ff;border-color:transparent}
+.cmp h3{margin-bottom:10px}
+.cmp ul{list-style:none;margin-top:18px}
+.cmp li{padding:11px 0;border-top:1px solid currentColor;border-color:color-mix(in srgb,currentColor 25%,transparent);font-size:16px}
+/* app */
+.app{display:grid;grid-template-columns:1fr 1fr;gap:clamp(30px,7vw,110px);align-items:center}
+.phones{position:relative;height:clamp(380px,48vw,600px)}
+.phones .p{position:absolute;width:min(46%,250px);aspect-ratio:9/18.5;background:#0b0b0a;border-radius:30px;padding:8px;box-shadow:0 30px 60px -20px rgba(40,25,10,.5)}
+.phones .p:nth-child(1){left:4%;top:8%;transform:rotate(-4deg)}
+.phones .p:nth-child(2){right:4%;top:0;transform:rotate(3deg)}
+.phones .p div{width:100%;height:100%;background:var(--paper);border-radius:23px;padding:16% 9% 8%;font-size:12px;display:flex;flex-direction:column;gap:9px}
+.phones h5{font:400 20px/1.1 var(--serif);margin-bottom:4px}
+.phones .ln{display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding:7px 0}
+.phones .ln em{font-style:normal;color:var(--soft)}
+.ticks{list-style:none;margin-top:28px}
+.ticks li{padding:14px 0;border-top:1px solid var(--line)}
+.ticks li:last-child{border-bottom:1px solid var(--line)}
+/* how */
+.how{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(20px,3vw,48px);margin-top:clamp(40px,6vw,80px)}
+.how div{border-top:1px solid var(--ink);padding-top:22px}
+.how .n{font:300 clamp(60px,8vw,110px)/1 var(--serif);letter-spacing:-.05em;color:var(--accent);margin-bottom:10px}
+.how p{color:var(--soft);margin-top:10px}
+/* sk */
+.sk{background:var(--ink);color:#ECE6DA;text-align:center}
+.sk h2{max-width:14ch;margin:20px auto 26px}
+.sk p{color:#A9A398;max-width:32em;margin:0 auto}
+.sk .eyebrow{color:#A9A398}
+/* faq */
+details{border-top:1px solid var(--line);padding:24px 0}
+details:last-of-type{border-bottom:1px solid var(--line)}
+summary{cursor:pointer;list-style:none;font-family:var(--serif);font-size:clamp(20px,2.2vw,28px);display:flex;justify-content:space-between;gap:20px}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";font-family:var(--sans);font-weight:300;transition:transform .3s}
+details[open] summary::after{transform:rotate(45deg)}
+details p{color:var(--soft);margin-top:14px;max-width:40em}
+/* cta */
+.cta-s{text-align:center;background:var(--paper)}
+.cta-s h2{max-width:13ch;margin:18px auto 22px}
+.cta-s .lead{margin:0 auto 34px}
+form{display:flex;flex-direction:column;gap:14px;max-width:460px;margin:0 auto;text-align:left}
+form input[type=email]{font:inherit;padding:17px 22px;border-radius:999px;border:1px solid var(--ink);background:transparent}
+.chk{display:flex;gap:10px;font-size:14px;color:var(--soft);align-items:flex-start}
+.chk input{margin-top:4px;accent-color:var(--accent)}
+.hp{position:absolute;left:-9999px}
+.msg{font-size:14px;min-height:20px;text-align:center}
+footer{padding:50px 0;font-size:14px;color:var(--soft)}
+footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px}
+
+/* reveal */
+.rv{opacity:0;transform:translateY(24px);transition:opacity .9s,transform .9s cubic-bezier(.2,.7,.2,1)}
+.rv.in{opacity:1;transform:none}
+
+@media(max-width:860px){
+  body{font-size:16px}
+  .story-in,.split,.app,.compare,.how{grid-template-columns:1fr}
+  .split h2{position:static}
+  .pin{order:-1;position:sticky;top:0;height:54vh;height:54svh;z-index:5;background:var(--night)}
+  .duo{height:100%}
+  .steps{padding:6vh 0 20vh}
+  .step{min-height:62vh}
+  .phone{width:36%}
+  .mini{width:76%}
+  .day .r .row:nth-of-type(n+5){display:none}
+  .rows article{grid-template-columns:44px 1fr}
+}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  .rv{opacity:1;transform:none}
+  .step{opacity:1}
+  .board{transform:none}
+}
+</style>
+</head>
+<body>
+
+<nav id="nav"><div class="wrap">
+  <a class="logo" href="#top">Rema<i>.</i></a>
+  <a class="btn" href="#cakaren">Čakacia listina</a>
+</div></nav>
+
+<header class="hero" id="top">
+  <div class="wrap">
+    <p class="eyebrow">Rodinná e-ink tabuľa na stenu</p>
+    <h1>Celá rodina na <em>jednej</em> stene.</h1>
+    <p class="lead">Dnešný deň, nákup a plány všetkých, ktorých máte radi. Na papierovom displeji, ktorý nesvieti, nepípa a nechce vašu pozornosť.</p>
+    <div class="cta"><a class="btn" href="#cakaren">Chcem ju doma</a><a class="btn ghost" href="#pribeh">Pozrieť, ako funguje</a></div>
+    <div class="stage">
+      <div class="board" id="heroBoard"><div class="screen" id="heroScreen"></div></div>
+      <p class="cap">Ukážka. Kliknite na Dnes, Týždeň alebo Mesiac. Dátum a meniny sú dnešné.</p>
+    </div>
+  </div>
+</header>
+
+<section class="story" id="pribeh">
+  <div class="wrap"><div class="story-in">
+    <div class="steps">
+      <div class="step on" data-i="0"><span class="num">I.</span><h2>Mama si na nákupe <em>spomenie</em>.</h2><p>Došlo mlieko. Nikto nemá po ruke papier ani pero.</p></div>
+      <div class="step" data-i="1"><span class="num">II.</span><h2>Jedným ťukom v <em>mobile</em>.</h2><p>Napíše „Mlieko“ do aplikácie. Hotovo, nič viac netreba.</p></div>
+      <div class="step" data-i="2"><span class="num">III.</span><h2>A doma to <em>už visí</em>.</h2><p>Nákup sa objaví na tabuli v kuchyni. Ocko ho uvidí pri raňajkách, bez správy, bez volania.</p></div>
+    </div>
+    <div class="pin"><div class="duo" id="duo" data-s="0">
+      <div class="phone"><div class="in">
+        <h5>Nákup</h5>
+        <div class="it"><i></i>Chlieb</div>
+        <div class="it"><i></i>Jablká</div>
+        <div class="it"><i></i>Maslo</div>
+        <div class="it fresh" id="pNew" hidden><i></i>Mlieko</div>
+        <div class="add"><b id="typed"></b><span class="caret"></span></div>
+      </div></div>
+      <div class="mini"><div class="board"><div class="screen">
+        <div class="shop">
+          <div style="padding:4cqw 4cqw 0 22cqw;display:flex;flex-direction:column;height:100%">
+            <div class="tt">Nákup</div>
+            <div class="sub"><span>Rodinný zoznam</span><span id="cnt">3 položky</span></div>
+            <div class="row"><span class="bx"></span>Chlieb</div>
+            <div class="row"><span class="bx on"></span>Jablká</div>
+            <div class="row"><span class="bx"></span>Maslo</div>
+            <div class="row hid" id="bNew"><span class="bx"></span>Mlieko</div>
+          </div>
+        </div>
+        <div class="sync" id="sync">Aktualizované</div>
+        <div class="flash" id="flash2"></div>
+      </div></div></div>
+    </div></div>
+  </div></div>
+</section>
+
+<section id="preco">
+  <div class="wrap">
+    <p class="eyebrow">Prečo e-ink</p>
+    <h2 style="max-width:14ch;margin:18px 0 0">Papier, ktorý sa <em>sám</em> prepisuje.</h2>
+    <div class="compare">
+      <div class="cmp eink rv"><h3>E-ink</h3><p>Ako tlačený papier. Čitateľný aj na priamom slnku, bez žiary a bez modrého svetla večer.</p>
+        <ul><li>Nesvieti. Je na stene ako obraz.</li><li>Energiu berie len pri zmene obrazu.</li><li>Nevyrušuje oznámeniami.</li></ul></div>
+      <div class="cmp lcd rv"><h3>Bežný displej</h3><p>Stále svieti, stále volá po pozornosti a stále je o krok k ďalšej aplikácii.</p>
+        <ul><li>Svieti aj v tmavej izbe.</li><li>Stále sa spotrebúva energia.</li><li>Láka k scrollovaniu.</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<section class="paper" id="aplikacia">
+  <div class="wrap app">
+    <div>
+      <p class="eyebrow">Aplikácia</p>
+      <h2 style="margin:18px 0 22px">Celá rodina <em>v jednom</em> zozname.</h2>
+      <p class="lead">Každý pridáva z vlastného mobilu. Tabuľa to zobrazí všetkým rovnako.</p>
+      <ul class="ticks"><li>Spoločný kalendár a pripomienky</li><li>Rodinný nákupný zoznam</li><li>Pozvánka pre každého člena domácnosti</li></ul>
+    </div>
+    <div class="phones rv">
+      <div class="p"><div><h5>Dnes</h5><div class="ln"><span>Škôlka</span><em>7:45</em></div><div class="ln"><span>Plávanie</span><em>16:30</em></div><div class="ln"><span>Večera u babky</span><em>18:30</em></div></div></div>
+      <div class="p"><div><h5>Nákup</h5><div class="ln"><span>Chlieb</span><em>Mama</em></div><div class="ln"><span>Mlieko</span><em>Mama</em></div><div class="ln"><span>Cestoviny</span><em>Ocko</em></div></div></div>
+    </div>
+  </div>
+</section>
+
+<section id="ako">
+  <div class="wrap">
+    <p class="eyebrow">Ako to funguje</p>
+    <h2 style="max-width:13ch;margin-top:18px">Tri kroky, <em>žiadne</em> káble.</h2>
+    <div class="how">
+      <div class="rv"><div class="n">1</div><h3>Zavesíte</h3><p>Tabuľa je tenká a pokojne visí ako obraz. Stačí zapojiť napájanie.</p></div>
+      <div class="rv"><div class="n">2</div><h3>Spárujete</h3><p>V aplikácii pridáte tabuľu a pozvete rodinu.</p></div>
+      <div class="rv"><div class="n">3</div><h3>Žijete</h3><p>Všetko, čo pridáte, sa objaví na stene. O zvyšok sa stará Rema.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="sk">
+  <div class="wrap rv">
+    <p class="eyebrow">Vytvorené na Slovensku</p>
+    <h2>Navrhnuté <em>doma</em>, pre domovy.</h2>
+    <p>Rema vzniká na Slovensku a hovorí po slovensky. Dátumy, sviatky a meniny má v kalendári od prvého dňa.</p>
+  </div>
+</section>
+
+<section id="otazky">
+  <div class="wrap split">
+    <div><p class="eyebrow">Otázky</p><h2 style="margin-top:18px">Čo sa <em>pýtate</em>.</h2></div>
+    <div>
+      <details><summary>Kedy bude Rema dostupná?</summary><p>Zatiaľ zbierame čakaciu listinu. Kto je v nej, dozvie sa ako prvý.</p></details>
+      <details><summary>Koľko bude stáť?</summary><p>Cenu zverejníme pred spustením. Ľudia z čakacej listiny ju uvidia ako prví.</p></details>
+      <details><summary>Musím mať stále zapnuté Wi-Fi?</summary><p>Tabuľa sa pripája k domácej sieti, aby sa zmeny z mobilov objavili na stene.</p></details>
+      <details><summary>Nebude mi rušiť v spálni?</summary><p>E-ink nesvieti. V tmavej izbe je len papier bez žiary.</p></details>
+      <details><summary>Čo moje údaje?</summary><p>Zbierame len to, čo potrebujeme. Podrobnosti budú v ochrane údajov.</p></details>
+    </div>
+  </div>
+</section>
+
+<section class="cta-s" id="cakaren">
+  <div class="wrap">
+    <p class="eyebrow">Čakacia listina</p>
+    <h2>Prvá stena <em>môže byť</em> vaša.</h2>
+    <p class="lead">Zanechajte e-mail a dáme vám vedieť ako prvým.</p>
+    <form id="wl" novalidate>
+      <input type="email" id="em" placeholder="vas@email.sk" autocomplete="email" required aria-label="E-mail">
+      <input class="hp" type="text" id="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <label class="chk"><input type="checkbox" id="ok"><span>Súhlasím so spracovaním e-mailu na účel informovania o spustení Remy.</span></label>
+      <button class="btn" type="submit" style="justify-content:center">Pridať ma</button>
+      <p class="msg" id="msg" role="status"></p>
+    </form>
+  </div>
+</section>
+
+<footer><div class="wrap"><span>© Rema</span><span>Ochrana údajov</span></div></footer>
+
+<script>
+(function(){
+var rm=matchMedia('(prefers-reduced-motion: reduce)').matches;
+var DAYS=['Nedeľa','Pondelok','Utorok','Streda','Štvrtok','Piatok','Sobota'];
+var DS=['PO','UT','ST','ŠT','PI','SO','NE'];
+var MON=['január','február','marec','apríl','máj','jún','júl','august','september','október','november','december'];
+var now=new Date(), meniny={};
+function pad(n){return String(n).padStart(2,'0')}
+function nameFor(d){return meniny[pad(d.getMonth()+1)+'-'+pad(d.getDate())]||''}
+
+function day(){
+  return '<div class="day"><div class="l"><div class="big">'+now.getDate()+'</div><div class="wd">'+DAYS[now.getDay()]+'</div><div class="mo">'+MON[now.getMonth()]+' '+now.getFullYear()+'</div><div class="nm">Meniny má<b>'+(nameFor(now)||'…')+'</b></div></div>'+
+  '<div class="r"><h4>Dnes</h4><div class="row"><time>7:45</time>Škôlka</div><div class="row"><time>16:30</time>Plávanie</div><div class="row"><time>18:30</time>Večera u babky</div><div class="gap"></div><h4>Nákup</h4><div class="row"><span class="bx"></span>Chlieb</div><div class="row"><span class="bx on"></span>Jablká</div><div class="row"><span class="bx"></span>Mlieko</div></div></div>';
+}
+function week(){
+  var m=new Date(now);m.setDate(now.getDate()-((now.getDay()+6)%7));
+  var h='<div class="week">';
+  for(var i=0;i<7;i++){var d=new Date(m);d.setDate(m.getDate()+i);var t=d.toDateString()===now.toDateString();
+    h+='<div'+(t?' class="today"':'')+'><span class="d">'+DS[i]+'</span><span class="n">'+d.getDate()+'</span>'+
+    (i%3===0?'<span class="ev">Škôlka 7:45</span>':'')+(i===2||i===4?'<span class="ev">Plávanie 16:30</span>':'')+(i===5?'<span class="ev">Výlet</span>':'')+
+    '<span class="nmx">'+nameFor(d)+'</span></div>';}
+  return h+'</div>';
+}
+function month(){
+  var y=now.getFullYear(),mo=now.getMonth(),first=new Date(y,mo,1),off=(first.getDay()+6)%7,len=new Date(y,mo+1,0).getDate();
+  var h='<div class="month"><div class="ttl"><b>'+MON[mo]+'</b><span>'+y+'</span></div><div class="grid">';
+  DS.forEach(function(x){h+='<div class="h">'+x+'</div>'});
+  for(var i=0;i<off;i++)h+='<div class="off"></div>';
+  for(var d=1;d<=len;d++){var c=(d===now.getDate()?'t ':'')+((d%5===2)?'dot':'');h+='<div class="'+c+'">'+d+'</div>';}
+  return h+'</div></div>';
+}
+var scr=document.getElementById('heroScreen'),cur='day';
+function paint(v){
+  scr.innerHTML='<div class="tabs" role="tablist">'+[['day','Dnes'],['week','Týždeň'],['month','Mesiac']].map(function(a){return '<button role="tab" data-v="'+a[0]+'" aria-selected="'+(a[0]===v)+'">'+a[1]+'</button>'}).join('')+'</div><div class="view">'+({day:day,week:week,month:month})[v]()+'</div><div class="flash" id="fl"></div>';
+  cur=v;
+}
+function setView(v){
+  if(v===cur)return;
+  if(rm){paint(v);return}
+  var f=document.getElementById('fl');f.classList.add('go');
+  setTimeout(function(){paint(v);var n=document.getElementById('fl');n.classList.add('go');setTimeout(function(){n.classList.remove('go')},700)},230);
+}
+scr.addEventListener('click',function(e){var b=e.target.closest('[data-v]');if(b)setView(b.dataset.v)});
+paint('day');
+fetch('meniny.json').then(function(r){return r.json()}).then(function(j){meniny=j;var v=cur;cur='';paint(v)}).catch(function(){});
+
+/* nav */
+var nav=document.getElementById('nav');
+addEventListener('scroll',function(){nav.classList.toggle('solid',scrollY>30)},{passive:true});
+
+/* reveal */
+var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{threshold:.15});
+document.querySelectorAll('.rv').forEach(function(x){io.observe(x)});
+
+/* story */
+var duo=document.getElementById('duo'),steps=document.querySelectorAll('.step'),typed=document.getElementById('typed'),pNew=document.getElementById('pNew'),bNew=document.getElementById('bNew'),cnt=document.getElementById('cnt'),sync=document.getElementById('sync'),fl2=document.getElementById('flash2');
+var state=-1,tm;
+function typeIt(){clearTimeout(tm);var w='Mlieko',i=0;typed.textContent='';(function n(){if(i<w.length){typed.textContent+=w[i++];tm=setTimeout(n,rm?0:130)}})()}
+function go(s){
+  if(s===state)return;var prev=state;state=s;duo.dataset.s=s;
+  steps.forEach(function(x,i){x.classList.toggle('on',i===s)});
+  if(s===0){typed.textContent='';pNew.hidden=true;bNew.classList.add('hid');cnt.textContent='3 položky';sync.classList.remove('on');clearTimeout(tm)}
+  if(s===1){typeIt();pNew.hidden=true;bNew.classList.add('hid');sync.classList.remove('on');cnt.textContent='3 položky'}
+  if(s===2){clearTimeout(tm);typed.textContent='';pNew.hidden=false;
+    if(!rm){fl2.classList.remove('go');void fl2.offsetWidth;fl2.classList.add('go')}
+    setTimeout(function(){bNew.classList.remove('hid');bNew.classList.add('fresh');cnt.textContent='4 položky';sync.classList.add('on')},rm?0:260)}
+}
+var so=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting)go(+e.target.dataset.i)})},{rootMargin:'-45% 0px -45% 0px'});
+steps.forEach(function(s){so.observe(s)});
+go(0);
+
+/* form (zatiaľ len ukážka, Supabase pridáme v ďalšom kroku) */
+document.getElementById('wl').addEventListener('submit',function(e){
+  e.preventDefault();var m=document.getElementById('msg'),v=document.getElementById('em').value.trim();
+  if(document.getElementById('hp').value)return;
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(v)){m.textContent='Skontrolujte, prosím, e-mail.';return}
+  if(!document.getElementById('ok').checked){m.textContent='Potrebujeme váš súhlas.';return}
+  m.textContent='Ďakujeme. Ukážka formulára: ukladanie doplníme v ďalšom kroku.';
+});
+})();
+</script>
+</body>
+</html>
